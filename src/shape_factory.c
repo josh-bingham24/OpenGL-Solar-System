@@ -7,11 +7,13 @@
 void DisposeShape(Shape *shape);
 
 
+#pragma region Circle
 
-Shape CreateCircle(float radius, unsigned int edges, vec3 initialPosition) {
+Shape CreateCircle(float radius, unsigned int edges, vec3 initialPosition, vec3 initialVelocity, float mass) {
     Shape circle;
 
     glm_vec3_copy(initialPosition, circle.position);
+    glm_vec3_copy(initialVelocity, circle.velocity);
 
     float *vertices = malloc(3 * 5 * edges * sizeof(float));
 
@@ -63,9 +65,12 @@ Shape CreateCircle(float radius, unsigned int edges, vec3 initialPosition) {
     }
     circle.vertices = vertices;
     circle.rotation = 0.0f;
+    circle.mass = mass;
 
     return circle;
 }
+
+#pragma endregion
 
 Shape CreateRectangle(float width, float height, vec3 initialPosition) {
     Shape rectangle;

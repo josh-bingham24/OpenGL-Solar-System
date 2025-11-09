@@ -5,12 +5,14 @@
 
 typedef struct {
     float *vertices;
-    vec3 position;
     float rotation;
+    vec3 position;
+    vec3 velocity;
+    float mass;
 } Shape;
 
 
-Shape CreateCircle(float radius, unsigned int edges, vec3 initialPosition);
+Shape CreateCircle(float radius, unsigned int edges, vec3 initialPosition, vec3 initialVelocity, float mass);
 Shape CreateRectangle(float width, float height, vec3 initialPosition);
 void DestroyShape(Shape *shape);
 

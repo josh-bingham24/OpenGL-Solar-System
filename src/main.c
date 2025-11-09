@@ -28,6 +28,10 @@ Camera camera;
 float lastX = 400, lastY = 300;
 bool firstMouse = true;
 
+// ----- Shapes ----
+Shape sun;
+Shape planet;
+
 // ----- Time -----
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -67,6 +71,10 @@ int main()
 
     // setup camera
     camera = Camera_init(STATIC, 60.0f, 0.1f);
+
+    // setup sun
+    sun = CreateCircle(0.5f, 36, (vec3){ 0.0f, 0.0f, 0.0f}, (vec3){ 0.0f, 0.0f, 0.0f}, 100);
+    planet = CreateCircle(0.1f, 36, (vec3){ 3.0f, 0.0f, 0.0f}, (vec3){ 0.0f, 1.0f, 0.0f}, 1);
     
     srand(time(0));
 
@@ -79,14 +87,23 @@ int main()
     glGenVertexArrays(1, &VAO2);
 
     // bind data
-    // glBindVertexArray(VAO);
-    // glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // glBufferData(GL_ARRAY_BUFFER, 3 * 5 * 6 * sizeof(float), snake.links[0].vertices, GL_STATIC_DRAW);
-    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
-    // glEnableVertexAttribArray(0);
-    // glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-    //                       (void *)(3 * sizeof(float)));
-    // glEnableVertexAttribArray(1);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, 3 * 5 * 36 * sizeof(float), sun.vertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                          (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(VAO2);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO2);
+    glBufferData(GL_ARRAY_BUFFER, 3 * 5 * 36 * sizeof(float), planet.vertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                          (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     // unbind VBO and VAO
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -100,31 +117,6 @@ int main()
     unsigned int texture, cheeseballTexture;
     unsigned char *data;
     int width, height, nrChannels;
-
-    // textures
-    // glGenTextures(1, &texture);
-    // glBindTexture(GL_TEXTURE_2D, texture);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-    //                 GL_LINEAR_MIPMAP_LINEAR);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // stbi_set_flip_vertically_on_load(true);
-    // data = stbi_load("../resources/awesomeface.png", &width, &height, &nrChannels,
-    //                  0);
-    // if (data) {
-    //   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA,
-    //                GL_UNSIGNED_BYTE, data);
-    //   glGenerateMipmap(GL_TEXTURE_2D);
-    // } else {
-    //   printf("Failed to load face texture");
-    // }
-    // stbi_image_free(data);
-
-
-    // enable mouse
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     double lastTime = glfwGetTime();
 
@@ -153,6 +145,25 @@ int main()
         
         setMat4(&shader, "view", view);
         setMat4(&shader, "projection", projection);
+
+        // Move the planet
+        vec3 frameVelo;
+        glm_vec3_scale(planet.velocity, deltaTime, frameVelo);
+        glm_vec3_add(planet.position, frameVelo, planet.position);
+
+        // draw planet
+        glBindVertexArray(VAO2);
+        glm_mat4_identity(model);
+        glm_translate(model, planet.position);
+        setMat4(&shader, "model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 3 * 5 * 36);
+
+        // draw sun
+        glBindVertexArray(VAO);
+        glm_mat4_identity(model);
+        glm_translate(model, sun.position);
+        setMat4(&shader, "model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 3 * 5 * 36);
 
         glfwSwapBuffers(window);
         glfwPollEvents();    
@@ -191,5 +202,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-
+    // close window on escape
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
 }
