@@ -19,7 +19,6 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
-
 // ----- Shader -----
 Shader shader;
 
@@ -31,6 +30,9 @@ bool firstMouse = true;
 // ----- Shapes ----
 Shape sun;
 Shape planet;
+
+// float GRAVITY = -6.67408 * pow(10, -11);
+float GRAVITY = -0.0001;
 
 // ----- Time -----
 float deltaTime = 0.0f;
@@ -75,6 +77,16 @@ int main()
     // setup sun
     sun = CreateCircle(0.5f, 36, (vec3){ 0.0f, 0.0f, 0.0f}, (vec3){ 0.0f, 0.0f, 0.0f}, 100);
     planet = CreateCircle(0.1f, 36, (vec3){ 3.0f, 0.0f, 0.0f}, (vec3){ 0.0f, 1.0f, 0.0f}, 1);
+
+    float dist = glm_vec3_distance(sun.position, planet.position);
+    float test = -GRAVITY * (sun.mass + planet.mass);
+    float test2 = test / dist;
+    float planetVelo = sqrt(test2) * 14;
+    glm_vec3_copy((vec3){ 0.0f, planetVelo, 0.0f}, planet.velocity);
+    printf("dist: %f\n", dist);
+    printf("test: %f\n", test);
+    printf("test2: %f\n", test2);
+    printf("test2: %f\n", planetVelo);
     
     srand(time(0));
 
@@ -146,8 +158,17 @@ int main()
         setMat4(&shader, "view", view);
         setMat4(&shader, "projection", projection);
 
-        // Move the planet
+        // ----- MOVE THE PLANET -----
+        // calculate force vector of gravity
+        vec3 gravityVec;
+        glm_vec3_sub(planet.position, sun.position, gravityVec);
+
+        float gravityForce = GRAVITY * sun.mass * planet.mass / glm_vec3_distance2(sun.position, planet.position);
+        glm_vec3_scale(gravityVec, gravityForce, gravityVec);
+
+        // Update position
         vec3 frameVelo;
+        glm_vec3_add(planet.velocity, gravityVec, planet.velocity);
         glm_vec3_scale(planet.velocity, deltaTime, frameVelo);
         glm_vec3_add(planet.position, frameVelo, planet.position);
 
