@@ -3,16 +3,16 @@
 #include <learnopengl/camera.h>
 
 
-void HandleFlyMovement(Camera *camera, Direction direction, float speed) {
+void HandleMovement(Camera *camera, Direction direction, float speed) {
     vec3 temp;
 
     switch (direction) {
-        case CAM_FORWARD:
-            glm_vec3_scale(camera->front, speed, temp);
+        case CAM_UP:
+            glm_vec3_scale(camera->up, speed, temp);
             glm_vec3_add(camera->position, temp, camera->position); 
             break;
-        case CAM_BACKWARD:
-            glm_vec3_scale(camera->front, speed, temp);
+        case CAM_DOWN:
+            glm_vec3_scale(camera->up, speed, temp);
             glm_vec3_sub(camera->position, temp, camera->position);
             break;
         case CAM_LEFT:
@@ -56,7 +56,7 @@ Camera Camera_init(CameraType type, float fov, float sensitivity) {
                 .pitch          = 0.0f,
                 .fov            = fov,
                 .sensitivity    = sensitivity,
-                .Move           = HandleFlyMovement
+                .Move           = HandleMovement
             };
             break;
         case PLAYER:

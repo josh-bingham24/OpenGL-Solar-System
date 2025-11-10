@@ -4,8 +4,8 @@
 #include <cglm/cglm.h>
 
 typedef enum {
-    CAM_FORWARD,
-    CAM_BACKWARD,
+    CAM_UP,
+    CAM_DOWN,
     CAM_LEFT,
     CAM_RIGHT
 } Direction;
@@ -30,6 +30,7 @@ typedef struct Camera {
 } Camera;
 
 Camera Camera_init(CameraType type, float fov, float sensitivity);
+void HandleMovement(Camera *camera, Direction direction, float speed);
 void HandleMouse(Camera *camera, double xoffset, double yoffset);
 void HandleScroll(Camera *camera, double yoffset);
 

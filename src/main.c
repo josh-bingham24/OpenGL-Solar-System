@@ -17,7 +17,7 @@
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void processInput(GLFWwindow* window);
 
 // ----- Shader -----
 Shader shader;
@@ -64,8 +64,6 @@ int main()
     glViewport(0, 0, 800, 600);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback); 
-    glfwSetKeyCallback(window, key_callback);
 
 
     // setup shaders
@@ -139,6 +137,8 @@ int main()
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;  
+
+        processInput(window);
 
         // clear
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -221,9 +221,24 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     HandleMouse(&camera, xoffset, yoffset);
 }
 
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+void processInput(GLFWwindow* window)
 {
     // close window on escape
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+
+    // camera movement
+    float cameraSpeed = 2.5f * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) { 
+        HandleMovement(&camera, CAM_UP, cameraSpeed);
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        HandleMovement(&camera, CAM_DOWN, cameraSpeed);
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        HandleMovement(&camera, CAM_LEFT, cameraSpeed);
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        HandleMovement(&camera, CAM_RIGHT, cameraSpeed);
+    }
 }
