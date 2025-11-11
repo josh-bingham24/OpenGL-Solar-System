@@ -43,6 +43,10 @@ Camera Camera_init(CameraType type, float fov, float sensitivity) {
                 .up             = { 0.0f, 1.0f, 0.0f },
                 .yaw            = -90.0f,
                 .pitch          = 0.0f,
+                .height         = 6.0f,
+                .width          = 8.0f,
+                .aspectx        = 4,
+                .aspecty        = 3,
                 .fov            = fov,
                 .Move           = NULL
             };
@@ -92,9 +96,10 @@ void HandleMouse(Camera *camera, double xoffset, double yoffset) {
 }
 
 void HandleScroll(Camera *camera, double yoffset) {
-    camera->fov += (float)yoffset;
-    if (camera->fov < 1.0f)
-        camera->fov = 1.0f;
-    if (camera->fov > 60.0f)
-        camera->fov = 60.0f; 
+    if (yoffset + camera->height <= 0)
+        return;
+
+    double xoffset = yoffset * camera->aspectx / camera->aspecty;
+    camera->height += yoffset;
+    camera->width += xoffset;
 }

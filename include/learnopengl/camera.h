@@ -23,6 +23,10 @@ typedef struct Camera {
 
     float yaw,
         pitch,
+        height,
+        width,
+        aspectx,
+        aspecty,
         fov,
         sensitivity;
 

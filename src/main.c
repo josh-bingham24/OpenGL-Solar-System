@@ -64,7 +64,7 @@ int main()
     glViewport(0, 0, 800, 600);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
-
+    glfwSetScrollCallback(window, scroll_callback); 
 
     // setup shaders
     Shader_init(&shader, "../src/shader_v.txt", "../src/shader_f.txt");
@@ -76,15 +76,9 @@ int main()
     sun = CreateCircle(0.5f, 36, (vec3){ 0.0f, 0.0f, 0.0f}, (vec3){ 0.0f, 0.0f, 0.0f}, 100);
     planet = CreateCircle(0.1f, 36, (vec3){ 3.0f, 0.0f, 0.0f}, (vec3){ 0.0f, 1.0f, 0.0f}, 1);
 
-    float dist = glm_vec3_distance(sun.position, planet.position);
-    float test = -GRAVITY * (sun.mass + planet.mass);
-    float test2 = test / dist;
-    float planetVelo = sqrt(test2) * 14;
+    float grav = (-GRAVITY * (sun.mass + planet.mass)) / glm_vec3_distance(sun.position, planet.position);
+    float planetVelo = sqrt(grav) * 14;
     glm_vec3_copy((vec3){ 0.0f, planetVelo, 0.0f}, planet.velocity);
-    printf("dist: %f\n", dist);
-    printf("test: %f\n", test);
-    printf("test2: %f\n", test2);
-    printf("test2: %f\n", planetVelo);
     
     srand(time(0));
 
@@ -122,6 +116,8 @@ int main()
     // enable z-buffer
     glEnable(GL_DEPTH_TEST); 
 
+    // enable mouse
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // setup textures
     unsigned int texture, cheeseballTexture;
@@ -153,7 +149,7 @@ int main()
 
         // create view
         glm_look(camera.position, camera.front, camera.up, view);
-        glm_ortho(-8.0f, 8.0f, -6.0f, 6.0f, 0.1f, 100.0f, projection);
+        glm_ortho(-camera.width, camera.width, -camera.height, camera.height, 0.1f, 100.0f, projection);
         
         setMat4(&shader, "view", view);
         setMat4(&shader, "projection", projection);
