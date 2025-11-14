@@ -10,7 +10,8 @@ add_executable(OpenGL-Solar-System
     src/glad.c
     src/stb_image.c
     src/camera.c
-    src/shape_factory.c)
+    src/shape_factory.c
+    src/physics.c)
 
 target_include_directories(OpenGL-Solar-System
     PRIVATE ${PROJECT_SOURCE_DIR}/include)

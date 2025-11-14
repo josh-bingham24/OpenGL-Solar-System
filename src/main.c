@@ -10,6 +10,7 @@
 
 // me
 #include <me/shape_factory.h>
+#include <me/physics.h>
 
 // glm
 #include <cglm/cglm.h>
@@ -28,11 +29,13 @@ float lastX = 400, lastY = 300;
 bool firstMouse = true;
 
 // ----- Shapes ----
+SolarSystem solarSystem;
 Shape sun;
 Shape planet;
+Shape moon;
 
 // float GRAVITY = -6.67408 * pow(10, -11);
-float GRAVITY = -0.0001;
+// float GRAVITY = -0.0001;
 
 // ----- Time -----
 float deltaTime = 0.0f;
@@ -70,27 +73,34 @@ int main()
     Shader_init(&shader, "../src/shader_v.txt", "../src/shader_f.txt");
 
     // setup camera
-    camera = Camera_init(STATIC, 60.0f, 0.1f);
+    camera = Camera_init(STATIC, 300.0f, 400.0f, 60.0f, 0.1f);
 
-    // setup sun
-    sun = CreateCircle(0.5f, 36, (vec3){ 0.0f, 0.0f, 0.0f}, (vec3){ 0.0f, 0.0f, 0.0f}, 100);
-    planet = CreateCircle(0.1f, 36, (vec3){ 3.0f, 0.0f, 0.0f}, (vec3){ 0.0f, 1.0f, 0.0f}, 1);
+    // setup solar system
+    InitializeSolarSystem(&solarSystem);
 
-    float grav = (-GRAVITY * (sun.mass + planet.mass)) / glm_vec3_distance(sun.position, planet.position);
-    float planetVelo = sqrt(grav) * 14;
-    glm_vec3_copy((vec3){ 0.0f, planetVelo, 0.0f}, planet.velocity);
+    sun = CreateCircle(50.0f, 36, (vec3){ 0.0f, 0.0f, 0.0f}, (vec3){ 0.0f, 0.0f, 0.0f}, 10000000);
+    AddBody(&solarSystem, sun);
+
+    planet = CreateCircle(5.0f, 36, (vec3){ 150.0f, 0.0f, 0.0f}, (vec3){ 0.0f, 25.0f, 0.0f}, 1000);
+    AddBody(&solarSystem, planet);
+
+    moon = CreateCircle(1.0f, 36, (vec3){ 140.0f, 0.0f, 0.0f}, (vec3){ -10.0f, 25.0f, 0.0f}, 50);
+    AddBody(&solarSystem, moon);
     
     srand(time(0));
 
     // vertex handling
-    unsigned int VBO, VBO2, VAO, VAO2;
+    unsigned int VBO, VBO2, VBO3, VAO, VAO2, VAO3;
     // glGenBuffers(1, &EBO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &VBO2);
+    glGenBuffers(1, &VBO3);
     glGenVertexArrays(1, &VAO);
     glGenVertexArrays(1, &VAO2);
+    glGenVertexArrays(1, &VAO3);
 
     // bind data
+    //sun
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, 3 * 5 * 36 * sizeof(float), sun.vertices, GL_STATIC_DRAW);
@@ -100,9 +110,20 @@ int main()
                           (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
+    // planet
     glBindVertexArray(VAO2);
     glBindBuffer(GL_ARRAY_BUFFER, VBO2);
     glBufferData(GL_ARRAY_BUFFER, 3 * 5 * 36 * sizeof(float), planet.vertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                          (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    // moon
+    glBindVertexArray(VAO3);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO3);
+    glBufferData(GL_ARRAY_BUFFER, 3 * 5 * 36 * sizeof(float), moon.vertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
@@ -125,6 +146,7 @@ int main()
     int width, height, nrChannels;
 
     double lastTime = glfwGetTime();
+    float timeScale = 1;
 
     // main loop
     while(!glfwWindowShouldClose(window))
@@ -154,31 +176,27 @@ int main()
         setMat4(&shader, "view", view);
         setMat4(&shader, "projection", projection);
 
-        // ----- MOVE THE PLANET -----
-        // calculate force vector of gravity
-        vec3 gravityVec;
-        glm_vec3_sub(planet.position, sun.position, gravityVec);
-
-        float gravityForce = GRAVITY * sun.mass * planet.mass / glm_vec3_distance2(sun.position, planet.position);
-        glm_vec3_scale(gravityVec, gravityForce, gravityVec);
-
-        // Update position
-        vec3 frameVelo;
-        glm_vec3_add(planet.velocity, gravityVec, planet.velocity);
-        glm_vec3_scale(planet.velocity, deltaTime, frameVelo);
-        glm_vec3_add(planet.position, frameVelo, planet.position);
-
-        // draw planet
-        glBindVertexArray(VAO2);
-        glm_mat4_identity(model);
-        glm_translate(model, planet.position);
-        setMat4(&shader, "model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 3 * 5 * 36);
+        // calculates all gravitational forces and updates velocities and positions
+        SimulateGravity(&solarSystem, deltaTime);
 
         // draw sun
         glBindVertexArray(VAO);
         glm_mat4_identity(model);
-        glm_translate(model, sun.position);
+        glm_translate(model, solarSystem.bodies[0].position);
+        setMat4(&shader, "model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 3 * 5 * 36);
+
+        // draw planet
+        glBindVertexArray(VAO2);
+        glm_mat4_identity(model);
+        glm_translate(model, solarSystem.bodies[1].position);
+        setMat4(&shader, "model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 3 * 5 * 36);
+
+        // draw moon
+        glBindVertexArray(VAO3);
+        glm_mat4_identity(model);
+        glm_translate(model, solarSystem.bodies[2].position);
         setMat4(&shader, "model", model);
         glDrawArrays(GL_TRIANGLES, 0, 3 * 5 * 36);
 
@@ -224,7 +242,7 @@ void processInput(GLFWwindow* window)
         glfwSetWindowShouldClose(window, true);
 
     // camera movement
-    float cameraSpeed = 2.5f * deltaTime;
+    float cameraSpeed = camera.height * deltaTime;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) { 
         HandleMovement(&camera, CAM_UP, cameraSpeed);
     }

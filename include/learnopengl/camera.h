@@ -33,7 +33,7 @@ typedef struct Camera {
     void (*Move)(struct Camera *camera, Direction direction, float speed);
 } Camera;
 
-Camera Camera_init(CameraType type, float fov, float sensitivity);
+Camera Camera_init(CameraType type, float height, float width, float fov, float sensitivity);
 void HandleMovement(Camera *camera, Direction direction, float speed);
 void HandleMouse(Camera *camera, double xoffset, double yoffset);
 void HandleScroll(Camera *camera, double yoffset);

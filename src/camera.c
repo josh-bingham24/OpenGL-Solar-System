@@ -33,7 +33,7 @@ void HandleMovement(Camera *camera, Direction direction, float speed) {
     }
 }
 
-Camera Camera_init(CameraType type, float fov, float sensitivity) {
+Camera Camera_init(CameraType type, float height, float width, float fov, float sensitivity) {
     Camera cam;
     switch (type) {
         case STATIC:
@@ -43,8 +43,8 @@ Camera Camera_init(CameraType type, float fov, float sensitivity) {
                 .up             = { 0.0f, 1.0f, 0.0f },
                 .yaw            = -90.0f,
                 .pitch          = 0.0f,
-                .height         = 6.0f,
-                .width          = 8.0f,
+                .height         = height,
+                .width          = width,
                 .aspectx        = 4,
                 .aspecty        = 3,
                 .fov            = fov,
@@ -96,6 +96,8 @@ void HandleMouse(Camera *camera, double xoffset, double yoffset) {
 }
 
 void HandleScroll(Camera *camera, double yoffset) {
+    yoffset *= 3;
+
     if (yoffset + camera->height <= 0)
         return;
 
