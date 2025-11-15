@@ -7,6 +7,7 @@
 #include <stb_image.h>
 #include <learnopengl/camera.h>
 #include <time.h>
+#include <string.h>
 
 // me
 #include <me/shape_factory.h>
@@ -40,6 +41,8 @@ float lastFrame = 0.0f;
 
 int main()
 {
+    // srand(time(0));
+
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -78,44 +81,23 @@ int main()
     AddBodyWithOrbit(&solarSystem, solarSystem.bodies[0], 3.0f, (vec3){ 700.0f, 0.0f, 0.0f}, 5e6);
     AddBodyWithOrbit(&solarSystem, solarSystem.bodies[1], 1.0f, (vec3){ 710.0f, 0.0f, 0.0f}, 1e3);
     printf("Total # of celestial bodies: %d\n", solarSystem.count);
-    
-    srand(time(0));
+
+    // combine vertex data
+    float *fullData = (float*)malloc(3 * 5 * 36 * sizeof(float) * solarSystem.count);
+    for (unsigned int i = 0; i < solarSystem.count; i++) {
+        memcpy(fullData + (i * 3 * 5 * 36), solarSystem.bodies[i].vertices, 3 * 5 * 36 * sizeof(float));
+    }
 
     // vertex handling
-    unsigned int VBO, VBO2, VBO3, VAO, VAO2, VAO3;
+    unsigned int VBO, VAO;
     // glGenBuffers(1, &EBO);
     glGenBuffers(1, &VBO);
-    glGenBuffers(1, &VBO2);
-    glGenBuffers(1, &VBO3);
     glGenVertexArrays(1, &VAO);
-    glGenVertexArrays(1, &VAO2);
-    glGenVertexArrays(1, &VAO3);
 
     // bind data
-    //sun
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, 3 * 5 * 36 * sizeof(float), solarSystem.bodies[0].vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                          (void *)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    // planet
-    glBindVertexArray(VAO2);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO2);
-    glBufferData(GL_ARRAY_BUFFER, 3 * 5 * 36 * sizeof(float), solarSystem.bodies[1].vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                          (void *)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    // moon
-    glBindVertexArray(VAO3);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO3);
-    glBufferData(GL_ARRAY_BUFFER, 3 * 5 * 36 * sizeof(float), solarSystem.bodies[2].vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 3 * 5 * 36 * 3 * sizeof(float), fullData, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
@@ -171,26 +153,14 @@ int main()
         // calculates all gravitational forces and updates velocities and positions
         SimulateGravity(&solarSystem, deltaTime);
 
-        // draw sun
+        // draw
         glBindVertexArray(VAO);
-        glm_mat4_identity(model);
-        glm_translate(model, solarSystem.bodies[0].position);
-        setMat4(&shader, "model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 3 * 5 * 36);
-
-        // draw planet
-        glBindVertexArray(VAO2);
-        glm_mat4_identity(model);
-        glm_translate(model, solarSystem.bodies[1].position);
-        setMat4(&shader, "model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 3 * 5 * 36);
-
-        // draw moon
-        glBindVertexArray(VAO3);
-        glm_mat4_identity(model);
-        glm_translate(model, solarSystem.bodies[2].position);
-        setMat4(&shader, "model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 3 * 5 * 36);
+        for (int i = 0; i < 3; i++) {
+            glm_mat4_identity(model);
+            glm_translate(model, solarSystem.bodies[i].position);
+            setMat4(&shader, "model", model);
+            glDrawArrays(GL_TRIANGLES, i * 3 * 36, 3 * 36);
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();    
