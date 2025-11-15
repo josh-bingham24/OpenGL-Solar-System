@@ -1,8 +1,7 @@
 #include <me/physics.h>
 #include <stdlib.h>
 
-float GRAVITY = -6.67408e-3;
-// float GRAVITY = -0.01;
+float GRAVITY = 6.67408e-6;
 
 void CalculateAccelerationVectors(SolarSystem *solarSystem, vec3 *accelerationVecs);
 void UpdatePositions(SolarSystem *solarSystem, vec3 *accelerationVecs, float deltaTime);
@@ -13,8 +12,22 @@ void InitializeSolarSystem(SolarSystem *solarSystem) {
     solarSystem->count = 0;
 }
 
-void AddBody(SolarSystem *solarSystem, Shape body) {
+void AddBodyWithOrbit(SolarSystem *solarSystem, Shape bodyToOrbit, float radius, vec3 position, float mass) {
     solarSystem->count++;
+
+    vec3 posDifference;
+    glm_vec3_sub(position, bodyToOrbit.position, posDifference);
+    double bodyVelo = sqrt(GRAVITY * bodyToOrbit.mass / glm_vec3_norm(posDifference)) + glm_vec3_norm(bodyToOrbit.velocity);
+    Shape body = CreateCircle(radius, 36, position, (vec3){ 0.0f, bodyVelo, 0.0f}, mass);
+
+    solarSystem->bodies = realloc(solarSystem->bodies, sizeof(Shape) * solarSystem->count);
+    solarSystem->bodies[solarSystem->count - 1] = body;
+}
+
+void AddBody(SolarSystem *solarSystem, float radius, vec3 position, float mass) {
+    solarSystem->count++;
+
+    Shape body = CreateCircle(radius, 36, position, (vec3){ 0.0f, 0.0f, 0.0f}, mass);
 
     solarSystem->bodies = realloc(solarSystem->bodies, sizeof(Shape) * solarSystem->count);
     solarSystem->bodies[solarSystem->count - 1] = body;
@@ -46,7 +59,7 @@ void CalculateAccelerationVectors(SolarSystem *solarSystem, vec3 *accelerationVe
             vec3 r, gravityVec;
             float gravityForce;
             glm_vec3_sub(currentBody.position, affectingBody.position, r);
-            gravityForce = GRAVITY * affectingBody.mass * currentBody.mass / pow(glm_vec3_norm(r), 3);
+            gravityForce = -GRAVITY * affectingBody.mass * currentBody.mass / pow(glm_vec3_norm(r), 3);
             glm_vec3_scale(r, gravityForce, gravityVec);
 
             // add to net force

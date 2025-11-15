@@ -9,7 +9,8 @@ typedef struct {
 } SolarSystem;
 
 void InitializeSolarSystem(SolarSystem *solarSystem);
-void AddBody(SolarSystem *solarSystem, Shape body);
+void AddBodyWithOrbit(SolarSystem *solarSystem, Shape bodyToOrbit, float radius, vec3 position, float mass);
+void AddBody(SolarSystem *solarSystem, float radius, vec3 position, float mass);
 void SimulateGravity(SolarSystem *solarSystem, float deltaTime);
 
 
