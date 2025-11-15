@@ -78,13 +78,17 @@ int main()
     // setup solar system
     InitializeSolarSystem(&solarSystem);
 
-    sun = CreateCircle(50.0f, 36, (vec3){ 0.0f, 0.0f, 0.0f}, (vec3){ 0.0f, 0.0f, 0.0f}, 10000000);
+    sun = CreateCircle(50.0f, 36, (vec3){ 0.0f, 0.0f, 0.0f}, (vec3){ 0.0f, 0.0f, 0.0f}, 4.385e8);
     AddBody(&solarSystem, sun);
 
-    planet = CreateCircle(5.0f, 36, (vec3){ 150.0f, 0.0f, 0.0f}, (vec3){ 0.0f, 25.0f, 0.0f}, 1000);
+    float planetV = sqrt((6.67408e-3) * sun.mass / 200);
+    printf("velo: %f\n", planetV);
+    planet = CreateCircle(3.0f, 36, (vec3){ 200.0f, 0.0f, 0.0f}, (vec3){ 0.0f, planetV, 0.0f}, 5e6);
     AddBody(&solarSystem, planet);
 
-    moon = CreateCircle(1.0f, 36, (vec3){ 140.0f, 0.0f, 0.0f}, (vec3){ -10.0f, 25.0f, 0.0f}, 50);
+    float moonV = sqrt((6.67408e-3) * planet.mass / 10) + planetV;
+    printf("moon velo: %f\n", moonV);
+    moon = CreateCircle(1.0f, 36, (vec3){ 210.0f, 0.0f, 0.0f}, (vec3){ 0.0f, moonV, 0.0f}, 1e5);
     AddBody(&solarSystem, moon);
     
     srand(time(0));

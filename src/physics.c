@@ -1,8 +1,8 @@
 #include <me/physics.h>
 #include <stdlib.h>
 
-// float GRAVITY = -6.67408 * pow(10, -11);
-float GRAVITY = -0.01;
+float GRAVITY = -6.67408e-3;
+// float GRAVITY = -0.01;
 
 void CalculateAccelerationVectors(SolarSystem *solarSystem, vec3 *accelerationVecs);
 void UpdatePositions(SolarSystem *solarSystem, vec3 *accelerationVecs, float deltaTime);
